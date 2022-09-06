@@ -1,4 +1,4 @@
-pacman::p_load(heatmaply)
+pacman::p_load(dplyr,psych)
 
 data<-read.csv("datos_t1_centroides.csv",sep=",",header=TRUE)
 #Analisis de datos nulos.
@@ -34,4 +34,22 @@ apply(X=is.na(data2),MARGIN=2,FUN =sum)
 #data_final
 data_final<-data[c(row.names(data)[!(valores_tu)]),]
 apply(X=is.na(data_final),MARGIN=2,FUN =sum)
-      
+
+
+#Estadistica Descriptiva.
+
+#Notamos que las variables X1., cod_com, COMUNA, MANZ_EN no aportan valores diferentes.
+
+data_final %>% count(COMUNA)
+data_final %>% count(cod_com)
+data_final %>% count(MANZ_EN)
+#eliminamos X1 por ser los indices y las demás columnas por ser el mismo valor para todos los datos.
+
+data_final$X.1<-NULL
+data_final$COMUNA<-NULL
+data_final$cod_com<-NULL
+data_final$MANZ_EN<-NULL
+
+cor(data_final, method="pearson")[cor(data_final, method="pearson")>0.75]
+
+cor(data_final, method="pearson")>0.75
