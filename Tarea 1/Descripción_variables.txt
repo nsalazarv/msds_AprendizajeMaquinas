@@ -1,0 +1,48 @@
+X.1: indice
+cod_com: indice comuna
+comuna: indice comuna
+id_manz: ID de la manzana a la que pertenece
+Manz_en: Donde se ubica la manzana, tipo sector
+Zona: Zona en la que se encuentra, son 82 zonas.
+ibt: Creo que esto es Indice de bienestar total, pero no estoy 100% seguro.
+
+dim_acc: Dimension accesibilidad (debe ser como un estandar en base a los siguientes variables)
+iav: Indicador áreas verdes.
+icul:Indicador de culturales.
+idep:Indicador equipamiento deportivo
+isal:Indicador equipamiento salud
+iser:Indicador servicios publicos
+ise:Indicador servicios de educación
+
+dim_amb: Dimension ambiental, misma idea anterior.
+iata: Amplitud termica Anual
+icv: Indicador de cobertura vegetal.
+
+dim_soc: Dimension Socio-economica.
+ivi: Indicador Calidad de la vivienda
+isv:Indicador de suficiencia de viviendas
+iej:Indicador de escolaridad de jefe de hogar
+irh: Indicador de resiliencia de hogares
+iem: Indicador de empleo
+ipj:Indicador de participacion juvenil en empleo y estudio
+
+dim_seg:Dimension seguridad
+igpe:Indicador delitos graves contra personas
+igpr: Indicador de delitos graves contra la propiedad
+ilpe: indicador delitos leves contra personas
+iplr: indicador de delitos leves contra la propiedad
+
+AREA:
+TOTAL_V:
+HOG_N:
+
+PERSONAS: Número de personas
+E0A5: Personas con edad de 0 a 5
+E6A14: Personas con edad de 6 a 14
+E4A18: Personas con edad de 4 a 18
+E0A18: Personas con edad de 0 a 18
+E15A24: Personas con edad de 15 a 24
+E65ymas: Personas con edad de 65 hacia arriba
+
+X:Posicion en X
+Y:posicion en Y
