@@ -1,7 +1,9 @@
-pacman::p_load(dplyr,psych,ggplot2,tidyverse,proxy,dplyr,umap, ggdendro, cluster)
+pacman::p_load(dplyr,psych,ggplot2,tidyverse,proxy,dplyr,umap, ggdendro, cluster,dbscan)
+pacman::p_load(tidyverse, umap, factoextra, flexclust, cluster)
 
 data<-read.csv("datos_t1_centroides.csv",sep=",",header=TRUE)
-#Analisis de datos nulos.
+source("clusteriza.R")
+###Analisis de datos nulos.################
 
 sum(is.na(data))
 
@@ -36,7 +38,7 @@ data_final<-data[c(row.names(data)[!(valores_tu)]),]
 apply(X=is.na(data_final),MARGIN=2,FUN =sum)
 
 
-#Estadistica Descriptiva.
+###Estadistica Descriptiva.###########
 str(data)
 #Notamos que las variables X1., cod_com, COMUNA, MANZ_EN no aportan valores diferentes.
 unique(data["COMUNA"])
@@ -51,7 +53,7 @@ data_final$MANZ_EN<-NULL
 sum(duplicated(data_final))
 #Analisis de variables
 str(data_final)
-count(unique(data["ZONA"]))
+count(unique(data_final["ZONA"]))
 
 #Boxplots, revisar outliers.
 columnas<-colnames(data_final)
@@ -64,58 +66,282 @@ for(i in colnames(data_final)){
   #caja$out
 }
 #
-
+simil(list(data_final$iav,data_final$X), method="pearson")
 #generar una data que disminuya los computos, evaluar similitud y correlación.
 muestra<-data_final %>%
-  select(dim_acc, iav, icul,idep,isal,iser,ise) %>% 
-  sample_n(500)
+  select(dim_acc, iav, icul,idep,isal,iser,ise)
 simil(list(muestra$dim_acc,muestra$iav), method="pearson")
 simil(list(muestra$dim_acc,muestra$icul), method="pearson")
 simil(list(muestra$dim_acc,muestra$idep), method="pearson")
 simil(list(muestra$dim_acc,muestra$isal), method="pearson")
 simil(list(muestra$dim_acc,muestra$iser), method="pearson")
 simil(list(muestra$dim_acc,muestra$ise), method="pearson")
-cor(muestra, method="pearson")
+cor(muestra, method="pearson")[1,]
+for(i in c("pearson","kendal","spearman")){
+  print(i)
+  muestra<-data_final %>%
+    select(dim_acc, iav, icul,idep,isal,iser,ise)
+  print(cor(muestra, method=i)[1,])
+  muestra1<-data_final %>%
+    select(dim_amb, iata, icv)
+  print(cor(muestra1, method=i)[1,])
+  
+  muestra2<-data_final %>%
+    select(dim_soc, ivi, isv,iej,irh,iem,ipj)
+  print(cor(muestra2, method=i)[1,])
+  
+  muestra3<-data_final %>%
+    select(dim_seg, igpe, igpr,ilpe,ilpr)
+  print(cor(muestra3, method=i)[1,])
+  print("---------------------------------------------------")
+}
+#data_pp = data_final[, c('ID_MANZ', 'ZONA', 'ibt','E6A14', 'E15A24', 'dim_acc', 'iav', 'idep', 'isal', 'iata', 'icv', 'X', 'Y')]
 
-muestra<-data_final %>%
-  select(dim_amb, iata, icv) %>% 
-  sample_n(500)
-simil(list(muestra$dim_amb,muestra$iata), method="pearson")
-simil(list(muestra$dim_amb,muestra$icv), method="pearson")
-cor(muestra, method = "pearson")
-
-# analisis de clusters naturales ----
+#######################################CLUSTERS###################################
+### analisis de clusters naturales ####
 pacman::p_load(magick, factoextra)
+get_clust_tendency(data_final[1:35], n = 50, graph = FALSE)
 
-get_clust_tendency(data_final[,1:35], n = 13, graph = FALSE)
+models <- c("kmeans", "hier", "gmm", "cmeans", "dbscan")
+evaluacion_cluster <- function(data, clusters){
+  coefSil <- silhouette(clusters,dist(data))
+  cohesiones <- clus_cohes(data, clusters)
+  separaciones <- clus_sep(data, clusters)
+  correlacion <- clus_cor(data, clusters)
+  return(list(correlacion, mean(coefSil[,3]), cohesiones, separaciones))
+}
 
-model.umap <- umap(data_final[,1:35])
+###Correlaciones y sillohuete promedio distintos modelos####
+cor_s<-c()
+sil_s<-c()
+cor_xy<-c()
+sil_xy<-c()
+for(i in 1:4){
+  cat("###############","Metodo de clasificacion:", models[i],"#########################")
+  #CLUSTER SIN XY.
+  print("cluster sin XY")
+  model.umap <- umap(data_final[1:35])
+  data.umap <- 
+    model.umap$layout %>% 
+    as.data.frame()
+  modelo1<-clusteriza(data.umap, models[i], k = 13)
+  
+  ggplot(data.umap) +
+    geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+    theme()
+  eval <- evaluacion_cluster(data.umap, modelo1$cluster)
+  cor_s<-cbind(cor_s,eval[1])
+  sil_s<-cbind(sil_s,eval[2])
+  
+  #CLUSTER POR XY
+  print("cluster por XY")
+  modelo2<-clusteriza(data_final[36:37], models[i], k = 13)
+  ggplot(data_final[36:37]) +
+    geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
+    theme()
+  eval <- evaluacion_cluster(data_final[36:37], modelo2$cluster)
+  #UMAP CON CLUSTER POR XY.
+  ggplot(data.umap) +
+    geom_point(aes(V1,V2, col=factor(modelo2$cluster))) +
+    theme()
+  cor_xy<-cbind(cor_xy,eval[1])
+  sil_xy<-cbind(sil_xy,eval[2])
+}
+resultados<-rbind(models[1:4],cor_s,sil_s,cor_xy,sil_xy)
+resultados<-cbind(c("metodo","cor_s","sil_s","cor_xy","sil_xy"),resultados)
+resultados
 
+####Kmeans############
+cat("Metodo de clasificacion:", models[1])
+#CLUSTER SIN XY.
+print("cluster sin XY")
+model.umap <- umap(data_final[1:35])
 data.umap <- 
   model.umap$layout %>% 
   as.data.frame()
-
-get_clust_tendency(data.umap, n = 13, graph = FALSE)
-
-ggplot(data.umap, aes(V1, V2)) + 
-  geom_point()
-
 modelo1<-kmeans(data.umap,13)
+
 ggplot(data.umap) +
   geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
   theme()
+eval <- evaluacion_cluster(data.umap, modelo1$cluster)
+eval
 
-model.umap <- umap(data_final)
-data.umap <- 
-  model.umap$layout %>% 
-  as.data.frame()
-modelo2<-kmeans(data.umap,13)
+#CLUSTER POR XY
+print("cluster por XY")
+modelo2<-kmeans(data_final[36:37],13)
+ggplot(data_final[36:37]) +
+  geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data_final[36:37], modelo2$cluster)
+eval
+#UMAP CON CLUSTER POR XY.
 ggplot(data.umap) +
   geom_point(aes(V1,V2, col=factor(modelo2$cluster))) +
   theme()
 
-#Umap: reproyección no lineal de los datos.
-#PCA: reproyección lineal de los datos. Umap lo hace similar pero no lineal.
+#### Arbol######
+cat("Metodo de clasificacion:", models[2])
+#CLUSTER SIN XY.
+print("cluster sin XY")
+model.umap <- umap(data_final[1:35])
+data.umap <- 
+  model.umap$layout %>% 
+  as.data.frame()
+modelo1<-clusteriza(data.umap, models[2], k = 13)
+
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data.umap, modelo1$cluster)
+eval
+
+#CLUSTER POR XY
+print("cluster por XY")
+modelo2<-clusteriza(data_final[36:37], models[2], k = 13)
+ggplot(data_final[36:37]) +
+  geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data_final[36:37], modelo2$cluster)
+eval
+#UMAP CON CLUSTER POR XY.
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo2$cluster))) +
+  theme()
+
+#### gmm ######
+cat("Metodo de clasificacion:", models[3])
+#CLUSTER SIN XY.
+print("cluster sin XY")
+model.umap <- umap(data_final[1:35])
+data.umap <- 
+  model.umap$layout %>% 
+  as.data.frame()
+modelo1<-clusteriza(data.umap, models[3], k = 13)
+
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data.umap, modelo1$cluster)
+eval
+
+#CLUSTER POR XY
+print("cluster por XY")
+modelo2<-clusteriza(data_final[36:37], models[3], k = 13)
+ggplot(data_final[36:37]) +
+  geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data_final[36:37], modelo2$cluster)
+eval
+#UMAP CON CLUSTER POR XY.
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo2$cluster))) +
+  theme()
+
+#### Cmeans ######
+cat("Metodo de clasificacion:", models[4])
+#CLUSTER SIN XY.
+print("cluster sin XY")
+model.umap <- umap(data_final[1:35])
+data.umap <- 
+  model.umap$layout %>% 
+  as.data.frame()
+modelo1<-clusteriza(data.umap, models[4], k = 13)
+
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data.umap, modelo1$cluster)
+eval
+
+#CLUSTER POR XY
+print("cluster por XY")
+modelo2<-clusteriza(data_final[36:37], models[4], k = 13)
+ggplot(data_final[36:37]) +
+  geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data_final[36:37], modelo2$cluster)
+eval
+#UMAP CON CLUSTER POR XY.
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo2$cluster))) +
+  theme()
+
+#### Dbs Scan######
+sprintf("Metodo de clasificacion:", models[5])
+#CLUSTER SIN XY.
+print("cluster sin XY")
+model.umap <- umap(data_final[1:35])
+data.umap <- 
+  model.umap$layout %>% 
+  as.data.frame()
+modelo1<-clusteriza(data.umap, models[5], k = 13)
+
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data.umap, modelo1$cluster)
+eval
+
+modelo1
+?dbscan
+#CLUSTER POR XY
+print("cluster por XY")
+modelo2<-clusteriza(data_final[36:37], models[5], k = 13)
+ggplot(data_final[36:37]) +
+  geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data_final[36:37], modelo2$cluster)
+eval
+#UMAP CON CLUSTER POR XY.
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo2$cluster))) +
+  theme()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+clusters_jer <- function(data, i_d, i_a, k){
+  metodos_distancias <- c("mahalanobis", "euclidean", "maximum", "manhattan", "binary", "minkowski")
+  metodos_agregacion <- c("complete", "average", "median", "centroid", 
+                          "single", "ward.D","ward.D2", "mcquitty")
+  d_i <- dist_dd(data, method = metodos_distancias[i_d])
+  
+  model_i <- hclust(d_i, method=metodos_agregacion[i_a]) 
+  
+  # encontramos la minima distancia que cumple el nro de clusters
+  groups <- cutree(model_i, k)
+  data$cluster <- factor(groups)
+  
+  ggplot(data) +
+    geom_point(aes(V1,V2, col=cluster)) +
+    theme() +
+    ggtitle(paste0(k," clusters con distancia ",
+                   metodos_distancias[i_d],
+                   "\n y método de agregación ",
+                   metodos_agregacion[i_a]))
+  
+}
+
+clusters_jer(data.umap, 1, 8, 13)
+plot(clusters_jer(data.umap, 1, 8, 13))
+xy=data_final[36:37]%>% rename(V1=X,V2=Y)
+clusters_jer(xy, 1, 7, 13)
+#Evaluar el arbol sin XY
 model.umap <- umap(data_final[,1:35])
 
 data.umap <- 
@@ -135,12 +361,58 @@ model_complete <- hclust(distancia, method="complete")
 summary(model_complete)
 plot(model_complete)
 
-groups <- cutree(model_complete, h = 21.25)  
-groups %>% unique() %>% length()
-
-
 # visualizamos los grupos resultantes
 ggplot(data.umap) +
   geom_point(aes(V1,V2, col=factor(groups))) +
   theme()
+# evaluemos como evoluciona el numero de clusters con h
+d <- dist(data.umap)
+
+# analizo graficamente la distribucion de las distancias entre puntos
+hist(d)
+
+# creamos un vector vacio para almacenar los resultados
+res <- tibble("h" = quantile(d, probs  = (1:99)/100), n = 0, silh = 0)
+
+# recorremos los 100 percentiles y vamos rellenando el vector con la distancia intra cluster
+for (i in 1:99){
+  groups <- cutree(model_complete, h = res$h[i])
+  
+  res$silh[i] <- summary(silhouette(groups,dist(data.umap)))$si.summary[3]
+  res$n[i] <- groups %>% unique() %>% length()
+}  
+
+# visualizamos la silueta vs h
+ggplot(res, aes(h, silh)) + 
+  geom_point()
+#H=20.75 TENGO 13 CLUSTERS
+groups <- cutree(model_complete, h = 19)  
+groups %>% unique() %>% length()
+#INDICA QUE LO MEJOR SERIAN 16 CLUSTERS.
+
+############################ EVALUACION DE CLUSTERS #####################################
+#CLUSTER SIN XY.
+model.umap <- umap(data_final[1:35])
+data.umap <- 
+  model.umap$layout %>% 
+  as.data.frame()
+modelo1<-kmeans(data.umap,13)
+modelo1$cluster
+
+mat_dis <- 
+  data.umap %>% 
+  arrange(modelo1$cluster) %>% 
+  desc() %>%
+  dist() %>% 
+  as.matrix() 
+
+image(mat_dis)
+inspeccion_visual(data.umap, modelo1$cluster)
+
+
+
+eval <- evaluacion_cluster(data.umap, modelo1$cluster)
+eval
+
+?mclust
 
