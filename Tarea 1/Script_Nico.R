@@ -1,5 +1,5 @@
 pacman::p_load(dplyr,psych,ggplot2,tidyverse,proxy,dplyr,umap, ggdendro, cluster,dbscan)
-pacman::p_load(tidyverse, umap, factoextra, flexclust, cluster)
+pacman::p_load(tidyverse, umap, factoextra, flexclust, cluster,magick)
 
 data<-read.csv("datos_t1_centroides.csv",sep=",",header=TRUE)
 source("clusteriza.R")
@@ -20,7 +20,7 @@ valores_col<-apply(X=is.na(data),MARGIN=2,FUN =sum)>0
 valores_tu<-apply(X=is.na(data),MARGIN=1,FUN =sum)>0
 
 #columnas con su respectivo numero de nulos
-apply(X=is.na(data),MARGIN=2,FUN =sum)[valores]
+apply(X=is.na(data),MARGIN=2,FUN =sum)[valores_col]
 
 #Filas con su respectivo indice y n°de nulo
 indice_nulos<-cbind(rownames(data)[valores_tu],apply(X=is.na(data),MARGIN=1,FUN =sum)[valores_tu])
@@ -40,6 +40,7 @@ apply(X=is.na(data_final),MARGIN=2,FUN =sum)
 
 ###Estadistica Descriptiva.###########
 str(data)
+count(unique(data_final["ZONA"]))
 #Notamos que las variables X1., cod_com, COMUNA, MANZ_EN no aportan valores diferentes.
 unique(data["COMUNA"])
 unique(data["cod_com"])
@@ -53,19 +54,17 @@ data_final$MANZ_EN<-NULL
 sum(duplicated(data_final))
 #Analisis de variables
 str(data_final)
-count(unique(data_final["ZONA"]))
+
 
 #Boxplots, revisar outliers.
-columnas<-colnames(data_final)
-columnas[29:35]
-outliers<-c()
-boxplot(data_final["iav"])$out
+
 for(i in colnames(data_final)){
   caja<-boxplot(data_final[i],main=i)
   caja
   #caja$out
 }
-#
+
+
 simil(list(data_final$iav,data_final$X), method="pearson")
 #generar una data que disminuya los computos, evaluar similitud y correlación.
 muestra<-data_final %>%
@@ -77,6 +76,7 @@ simil(list(muestra$dim_acc,muestra$isal), method="pearson")
 simil(list(muestra$dim_acc,muestra$iser), method="pearson")
 simil(list(muestra$dim_acc,muestra$ise), method="pearson")
 cor(muestra, method="pearson")[1,]
+
 for(i in c("pearson","kendal","spearman")){
   print(i)
   muestra<-data_final %>%
@@ -95,12 +95,29 @@ for(i in c("pearson","kendal","spearman")){
   print(cor(muestra3, method=i)[1,])
   print("---------------------------------------------------")
 }
-#data_pp = data_final[, c('ID_MANZ', 'ZONA', 'ibt','E6A14', 'E15A24', 'dim_acc', 'iav', 'idep', 'isal', 'iata', 'icv', 'X', 'Y')]
+
+data_pp_xy = data_final[, 
+c('ID_MANZ', 'ZONA', 'ibt',"dim_acc",  
+  "iav", "idep","isal","ise", 'iata', 'icv', "dim_soc",  
+  "ivi","irh","iem","ipj","dim_seg",'E6A14', 'E15A24',"AREA", 
+  "TOTAL_V" ,"HOG_N","PERSONAS")]
+data_pp_xy['E6A24'] = data_final$E6A14 + data_final$E15A24
+data_pp_xy[, c('E6A14', 'E15A24')] <- list(NULL) 
+data_pp_xy<-cbind(data_pp_xy,data_final[36:37])
 
 #######################################CLUSTERS###################################
 ### analisis de clusters naturales ####
-pacman::p_load(magick, factoextra)
-get_clust_tendency(data_final[1:35], n = 50, graph = FALSE)
+
+get_clust_tendency(data_final, n = 40, graph = FALSE)
+get_clust_tendency(data_pp_xy, n = 40, graph = FALSE)
+
+get_clust_tendency(data_final[1:35], n = 40, graph = FALSE)
+get_clust_tendency(data_pp_xy[1:21], n = 40, graph = FALSE)
+get_clust_tendency(data_final[36:37], n = 40, graph = FALSE)
+get_clust_tendency(data_pp_xy[22:23], n = 40, graph = FALSE)
+
+#Usamos nuestra nueva data para realizar la clusterizacion luego de la limpieza
+#segun nuestro objetivo.
 
 models <- c("kmeans", "hier", "gmm", "cmeans", "dbscan")
 evaluacion_cluster <- function(data, clusters){
@@ -108,27 +125,27 @@ evaluacion_cluster <- function(data, clusters){
   cohesiones <- clus_cohes(data, clusters)
   separaciones <- clus_sep(data, clusters)
   correlacion <- clus_cor(data, clusters)
-  return(list(correlacion, mean(coefSil[,3]), cohesiones, separaciones))
+  return(list(correlacion, mean(coefSil[,3]), cohesiones, separaciones,coefSil))
 }
 
 ###Correlaciones y sillohuete promedio distintos modelos####
+
 cor_s<-c()
 sil_s<-c()
 cor_xy<-c()
 sil_xy<-c()
+#data_model<-data_final[1:35]
+data_model<-data_pp_xy[1:21]
 for(i in 1:4){
   cat("###############","Metodo de clasificacion:", models[i],"#########################")
   #CLUSTER SIN XY.
   print("cluster sin XY")
-  model.umap <- umap(data_final[1:35])
+  model.umap <- umap(data_model)
   data.umap <- 
     model.umap$layout %>% 
     as.data.frame()
   modelo1<-clusteriza(data.umap, models[i], k = 13)
   
-  ggplot(data.umap) +
-    geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
-    theme()
   eval <- evaluacion_cluster(data.umap, modelo1$cluster)
   cor_s<-cbind(cor_s,eval[1])
   sil_s<-cbind(sil_s,eval[2])
@@ -136,14 +153,7 @@ for(i in 1:4){
   #CLUSTER POR XY
   print("cluster por XY")
   modelo2<-clusteriza(data_final[36:37], models[i], k = 13)
-  ggplot(data_final[36:37]) +
-    geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
-    theme()
   eval <- evaluacion_cluster(data_final[36:37], modelo2$cluster)
-  #UMAP CON CLUSTER POR XY.
-  ggplot(data.umap) +
-    geom_point(aes(V1,V2, col=factor(modelo2$cluster))) +
-    theme()
   cor_xy<-cbind(cor_xy,eval[1])
   sil_xy<-cbind(sil_xy,eval[2])
 }
@@ -154,25 +164,28 @@ resultados
 ####Kmeans############
 cat("Metodo de clasificacion:", models[1])
 #CLUSTER SIN XY.
-print("cluster sin XY")
-model.umap <- umap(data_final[1:35])
-data.umap <- 
-  model.umap$layout %>% 
-  as.data.frame()
-modelo1<-kmeans(data.umap,13)
+#print("cluster sin XY")
+#model.umap <- umap(data_model)
+#data.umap <- 
+ # model.umap$layout %>% 
+  #as.data.frame()
+#modelo1<-kmeans(data.umap,13)
 
-ggplot(data.umap) +
-  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
-  theme()
-eval <- evaluacion_cluster(data.umap, modelo1$cluster)
-eval
+#ggplot(data.umap) +
+ # geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+  #theme()
+#eval <- evaluacion_cluster(data.umap, modelo1$cluster)
+
 
 #CLUSTER POR XY
 print("cluster por XY")
 modelo2<-kmeans(data_final[36:37],13)
 ggplot(data_final[36:37]) +
   geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
-  theme()
+  theme()+labs(title = "Clusters por posición", col="Clusters")
+coefSil <- silhouette(modelo2$cluster,dist(data_final[36:37]))
+fviz_silhouette(coefSil) + 
+  coord_flip()
 eval <- evaluacion_cluster(data_final[36:37], modelo2$cluster)
 eval
 #UMAP CON CLUSTER POR XY.
@@ -213,30 +226,44 @@ ggplot(data.umap) +
 cat("Metodo de clasificacion:", models[3])
 #CLUSTER SIN XY.
 print("cluster sin XY")
-model.umap <- umap(data_final[1:35])
+model.umap <- umap(data_model)
 data.umap <- 
   model.umap$layout %>% 
   as.data.frame()
 modelo1<-clusteriza(data.umap, models[3], k = 13)
 
-ggplot(data.umap) +
-  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
-  theme()
+
 eval <- evaluacion_cluster(data.umap, modelo1$cluster)
 eval
+coefSil <- silhouette(modelo1$cluster,dist(data.umap))
+fviz_silhouette(coefSil) + 
+  coord_flip()
+
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+  theme() + labs(title= "Cluster sin variables de posición")
+
+#Cluster sin XY en mapa XY
+ggplot(data_pp_xy[22:23]) +
+  geom_point(aes(X,Y, col=factor(modelo1$cluster))) +
+  theme()+
+  labs(title =  "Cluster sin variables de posición",col="Clusters")
+  
+
 
 #CLUSTER POR XY
 print("cluster por XY")
 modelo2<-clusteriza(data_final[36:37], models[3], k = 13)
 ggplot(data_final[36:37]) +
   geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
-  theme()
+  theme()+labs(title= "Cluster por posición")
 eval <- evaluacion_cluster(data_final[36:37], modelo2$cluster)
 eval
 #UMAP CON CLUSTER POR XY.
 ggplot(data.umap) +
   geom_point(aes(V1,V2, col=factor(modelo2$cluster))) +
-  theme()
+  theme()+labs(title= "Cluster por posición")
+
 
 #### Cmeans ######
 cat("Metodo de clasificacion:", models[4])
@@ -390,15 +417,8 @@ groups <- cutree(model_complete, h = 19)
 groups %>% unique() %>% length()
 #INDICA QUE LO MEJOR SERIAN 16 CLUSTERS.
 
-############################ EVALUACION DE CLUSTERS #####################################
-#CLUSTER SIN XY.
-model.umap <- umap(data_final[1:35])
-data.umap <- 
-  model.umap$layout %>% 
-  as.data.frame()
-modelo1<-kmeans(data.umap,13)
-modelo1$cluster
-
+############################ EVALUACION DE CLUSTERS GMM #####################################
+#MODELO SIN XY
 mat_dis <- 
   data.umap %>% 
   arrange(modelo1$cluster) %>% 
@@ -409,10 +429,25 @@ mat_dis <-
 image(mat_dis)
 inspeccion_visual(data.umap, modelo1$cluster)
 
-
-
 eval <- evaluacion_cluster(data.umap, modelo1$cluster)
 eval
+coefSil <- silhouette(modelo1$cluster,dist(data.umap))
+fviz_silhouette(coefSil) + 
+  coord_flip()
 
-?mclust
+#MODELO CON XY
+
+mat_dis <- 
+  data.umap %>% 
+  arrange(modelo2$cluster) %>% 
+  desc() %>%
+  dist() %>% 
+  as.matrix() 
+
+image(mat_dis)
+inspeccion_visual(data.umap, modelo2$cluster)
+
+eval <- evaluacion_cluster(data.umap, modelo2$cluster)
+eval
+
 
