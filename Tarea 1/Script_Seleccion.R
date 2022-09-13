@@ -124,11 +124,7 @@ kmedias <- function(data, coords, k, itermax = 10){
   # creo un for para iterar hasta las iteraciones maximas
   
   for(i in 1:itermax){
-    for(j in 1:ncol(dists)){
-      for(k in 1:nrow(dists)){
-        if(dists[j,k] <= 2000){
-          
-        
+    
     
           if(!mean(cluster_iter == cluster)==1){ # si el algoritmo aun no converge
             # calculo distancia de puntos con centroides de acuerdo a funcion
@@ -138,16 +134,13 @@ kmedias <- function(data, coords, k, itermax = 10){
             
       
             cluster_iter <- cluster # reasigno la variable auxiliar al cluster obtenido en la iteracion anterior
-            cluster <- apply(distk, 2, function(x) which(x==min(x))[1]) # identifico el cluster mas cercano a cada punto
+            cluster <- apply(distk, 2, function(x) which(x==min(x))[1] ) # identifico el cluster mas cercano a cada punto
             dist_min <- apply(distk, 2, function(x) min(x)) # identifico la distancia minima al cluster mas cercano
             output <- data.frame(dist_min, data, cluster) # construyo salida del modelo juntando la data con sus clusters asignados
             dist_clusts <- aggregate(.~cluster, output, mean) # agrego los datos por clusters obteniendo coordenadas y distancias medias
             centroids <- dist_clusts[,-(1:2)] # redefino los centroides
           }
         }
-      }
-    }
-  }
 
   return(list("clusters" = cluster, "centroides" = centroids)) # funcion devuelve una lista con los clusters de cada punto y con los centroides
 
