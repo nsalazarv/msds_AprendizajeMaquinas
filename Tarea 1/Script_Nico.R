@@ -6,7 +6,6 @@ source("clusteriza.R")
 ###Analisis de datos nulos.################
 
 sum(is.na(data))
-
 Tuplas_na<-sum(apply(X=is.na(data),MARGIN=1,FUN =sum)>0)
 Tuplas_na
 Tuplas_na*100/1661
@@ -38,13 +37,14 @@ data_final<-data[c(row.names(data)[!(valores_tu)]),]
 apply(X=is.na(data_final),MARGIN=2,FUN =sum)
 
 
-###Estadistica Descriptiva.###########
+##Estadistica Descriptiva.####
 str(data)
 count(unique(data_final["ZONA"]))
-#Notamos que las variables X1., cod_com, COMUNA, MANZ_EN no aportan valores diferentes.
 unique(data["COMUNA"])
 unique(data["cod_com"])
 unique(data["MANZ_EN"])
+#Notamos que las variables X1., cod_com, COMUNA, MANZ_EN no aportan valores diferentes.
+
 #eliminamos X1 por ser los indices y las demás columnas por ser el mismo valor para todos los datos.
 data_final$X.1<-NULL
 data_final$COMUNA<-NULL
@@ -163,18 +163,18 @@ resultados
 
 ####Kmeans############
 cat("Metodo de clasificacion:", models[1])
-#CLUSTER SIN XY.
-#print("cluster sin XY")
-#model.umap <- umap(data_model)
-#data.umap <- 
- # model.umap$layout %>% 
-  #as.data.frame()
-#modelo1<-kmeans(data.umap,13)
+CLUSTER SIN XY.
+print("cluster sin XY")
+model.umap <- umap(data_model)
+data.umap <- 
+  model.umap$layout %>% 
+  as.data.frame()
+modelo1<-kmeans(data.umap,13)
 
-#ggplot(data.umap) +
- # geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
-  #theme()
-#eval <- evaluacion_cluster(data.umap, modelo1$cluster)
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+  theme()
+eval <- evaluacion_cluster(data.umap, modelo1$cluster)
 
 
 #CLUSTER POR XY

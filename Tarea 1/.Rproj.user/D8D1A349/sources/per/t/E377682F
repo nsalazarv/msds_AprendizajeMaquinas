@@ -1,0 +1,27 @@
+{
+    "id": "E377682F",
+    "path": "C:/Users/nicov/Desktop/Universidad/Trabajos Universidad Uai/Semestre X/Metodos de aprendizaje de máquinas/github/tareas/msds_AprendizajeMaquinas/Tarea 1/Script_Entrega.R",
+    "project_path": "Script_Entrega.R",
+    "type": "r_source",
+    "hash": "841360733",
+    "contents": "",
+    "dirty": false,
+    "created": 1663163597371.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "305,96",
+        "scrollLine": "0"
+    },
+    "folds": "4|34|9|22|\n10|15|42|0|\n43|25|94|0|\n63|43|80|0|\n95|23|150|0|\n111|47|117|0|\n151|13|179|0|\n180|13|201|3|\n202|13|306|0|\n",
+    "lastKnownWriteTime": 1663168325,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1663168617779,
+    "read_only": false,
+    "read_only_alternatives": []
+}
