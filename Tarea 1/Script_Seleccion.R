@@ -1,5 +1,5 @@
 rm(list=ls())
-pacman::p_load(heatmaply, stuart, lavaan, FSinR, magick, factoextra, umap, ClustGeo)
+pacman::p_load(heatmaply, stuart, lavaan, FSinR, magick, factoextra, umap, ClustGeo, dplyr)
 
 data<-read.csv("datos_t1_centroides.csv",sep=",",header=TRUE)
 #Analisis de datos nulos.
@@ -68,83 +68,171 @@ results3$bestFeatures
 
 ## Data con variables: E6A14 E15A24 dim_acc iav idep isal iata icv
 
-data_pp = data_final[, c('ID_MANZ', 'ZONA', 'ibt','E6A14', 'E15A24', 'dim_acc', 'iav', 'idep', 'isal', 'ise', 'iata', 'icv', 'dim_soc', 'irh', 'iem', 'ipj', 'dim_seg', 'X', 'Y')]
+data_pp = data_final[, c('ID_MANZ', 'ZONA', 'ibt','E6A14', 'E15A24', 'dim_acc', 'iav', 'idep', 'isal', 'ise', 'iata', 'icv', 'dim_soc', 'ivi', 'irh', 'iem', 'ipj', 'dim_seg', "AREA", 
+                         "TOTAL_V" ,"HOG_N","PERSONAS", 'X', 'Y')]
 data_pp['E6A24'] = data_pp$E6A14 + data_pp$E15A24
 data_pp[, c('E6A14', 'E15A24', 'X', 'Y')] <- list(NULL)
 
-get_clust_tendency(data_pp, n = 5, graph = FALSE)
 
-#CLUSTER SIN XY.
-model.umap <- umap(data_pp)
-data.umap <- 
-  model.umap$layout %>% 
-  as.data.frame()
-modelo1<-kmeans(data.umap,13)
-modelo1$cluster
-ggplot(data.umap) +
-  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
-  theme()
 
-data_pp_xy = data_final[, c('ID_MANZ', 'ZONA', 'ibt','E6A14', 'E15A24', 'dim_acc', 'iav', 'idep', 'isal', 'ise', 'iata', 'icv', 'dim_soc', 'irh', 'iem', 'ipj', 'dim_seg', 'X', 'Y')]
-data_pp_xy['E6A24'] = data_pp$E6A14 + data_pp$E15A24
+data_pp_xy = data_final[, c('ID_MANZ', 'ZONA', 'ibt','E6A14', 'E15A24', 'dim_acc', 'iav', 'idep', 'isal', 'ise', 'iata', 'icv', 'dim_soc', 'ivi', 'irh', 'iem', 'ipj', 'dim_seg', "AREA", 
+                            "TOTAL_V" ,"HOG_N","PERSONAS", 'X', 'Y')]
+data_pp_xy['E6A24'] = data_final$E6A14 + data_final$E15A24
 data_pp_xy[, c('E6A14', 'E15A24')] <- list(NULL)
 
-#CLUSTER POR XY
-modelo2<-kmeans(data_pp_xy[,16:17],13)
-ggplot(data_pp_xy[,16:17]) +
+get_clust_tendency(data_pp, n = 5, graph = FALSE)
+
+# #CLUSTER SIN XY.
+
+# model.umap <- umap(data_pp)
+# data.umap <-
+#   model.umap$layout %>%
+#   as.data.frame()
+# modelo1<-kmeans(data.umap,13)
+# modelo1$cluster
+# ggplot(data.umap) +
+#   geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+#   theme()
+
+######################################################################################################
+# GMM
+
+source("clusteriza.R")
+models <- c("kmeans", "hier", "gmm", "cmeans", "dbscan")
+cat("Metodo de clasificacion:", models[3])
+#CLUSTER SIN XY.
+print("cluster sin XY")
+model.umap <- umap(data_pp)
+data.umap <-
+  model.umap$layout %>%
+  as.data.frame()
+modelo1<-clusteriza(data.umap, models[3], k = 13)
+
+ggplot(data.umap) +
+  geom_point(aes(V1,V2, col=factor(modelo1$cluster))) +
+  theme() + labs(title= "Cluster sin variables de posición")
+
+#Cluster sin XY en mapa XY
+ggplot(data_pp_xy[21:22]) +
+  geom_point(aes(X,Y, col=factor(modelo1$cluster))) +
+  theme()+
+  labs(title =  "Cluster sin variables de posición",col="Clusters")
+
+##############################################################################
+
+
+#CLUSTER POR XY en kmedias
+
+modelo2<-kmeans(data_pp_xy[,21:22],13)
+ggplot(data_pp_xy[,21:22]) +
   geom_point(aes(X,Y, col=factor(modelo2$cluster))) +
   theme()
+
 #UMAP CON CLUSTER POR XY.
+
 ggplot(data.umap) +
   geom_point(aes(V1,V2, col=factor(modelo2$cluster))) +
   theme()
 
-# Parte 3: Kmeans artesanal
+# Parte 3
 
 xy =  data_final[, c('X', 'Y')]
 
-#dists = as.matrix(dist(data_pp_xy[, c('X', 'Y')], method = "euclidean", diag = FALSE, upper = FALSE, p = 2))
+dists_vars = dist(data_pp, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
+dists_vars = as.dist(dists_vars)
 
-vec_norm <- norm(xy, type = "2")  
-vec_norm
+dists = dist(xy, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
+dists = as.dist(dists) 
 
-kmedias <- function(data, coords, k, itermax = 10){
+dists_alt = as.matrix(dists)
+  
+bin = matrix(data=NA, nrow=nrow(dists), ncol=ncol(dists))
+bin
 
-  # defino los centroides aleatoriamente seleccionando una muestra de la data recibida
-  centroids <- data[sample(1:nrow(data), k),]
-  
-  # Distancia entre puntos 
-  
-  dists = as.matrix(dist(coords, method = "euclidean", diag = FALSE, upper = FALSE, p = 2))
-  
-  # creo 2 variables auxiliares del mismo largo que me permitiran comparar si el algoritmo convergio
-  cluster <- 1:nrow(data)
-  cluster_iter <- cluster*0
-
-  # creo un for para iterar hasta las iteraciones maximas
-  
-  for(i in 1:itermax){
-    
-    
-          if(!mean(cluster_iter == cluster)==1){ # si el algoritmo aun no converge
-            # calculo distancia de puntos con centroides de acuerdo a funcion
-            distk <- sqrt(matrix(rowSums(expand.grid(rowSums(centroids*centroids),rowSums(data*data))), # hago calculo de producto punto enntre matrices
-                                 nrow=nrow(centroids)) - # calculo el tamaño de la matriz resultante
-                            2. * as.matrix(centroids) %*% t(as.matrix(data)))
-            
+for(i in 1:ncol(dists)){
+  for(j in 1:nrow(dists)){
+    if(dists_alt[i,j]<= 2000){
       
-            cluster_iter <- cluster # reasigno la variable auxiliar al cluster obtenido en la iteracion anterior
-            cluster <- apply(distk, 2, function(x) which(x==min(x))[1] ) # identifico el cluster mas cercano a cada punto
-            dist_min <- apply(distk, 2, function(x) min(x)) # identifico la distancia minima al cluster mas cercano
-            output <- data.frame(dist_min, data, cluster) # construyo salida del modelo juntando la data con sus clusters asignados
-            dist_clusts <- aggregate(.~cluster, output, mean) # agrego los datos por clusters obteniendo coordenadas y distancias medias
-            centroids <- dist_clusts[,-(1:2)] # redefino los centroides
-          }
-        }
-
-  return(list("clusters" = cluster, "centroides" = centroids)) # funcion devuelve una lista con los clusters de cada punto y con los centroides
-
+      bin[i,j] = 1
+    }
+    else{
+      bin[i,j] = 0
+    }
+  }
 }
 
-test = kmedias(data_pp, coords = xy, k = 13)
+bin
+
+D1 <- as.dist(1-bin)
+D1
+
+range.alpha <- seq(0,1,0.1)
+K <- 13
+cr <- choicealpha(dists_vars, D1, range.alpha,
+                  K, graph=FALSE)
+plot(cr)
+cr$Q
+
+tree <- hclustgeo(dists_vars,D1,alpha=0.8)
+P5bis <- cutree(tree,13)
+
+ggplot(xy) +
+  geom_point(aes(X,Y, col=factor(P5bis))) +
+  theme()
+
+#Cluster 2 y 3
+
+modelo2$cluster
+xy['cluster1'] = modelo1$cluster
+xy['cluster2'] = modelo2$cluster
+xy['cluster3'] = P5bis
+
+vec2 = c()
+
+for(i in 1:13){
+  
+  xy1 = xy[xy$cluster2 == i, ]
+  dists1 = as.matrix(dist(xy1[1:2], method = "euclidean", diag = FALSE, upper = FALSE, p = 2))
+  dists1[lower.tri(dists1)] <- 0
+  bin2 = dists1 > 2000
+  
+  vec2 = cbind(vec2, sum(bin2))
+  
+}
+
+vec3 = c()
+
+for(i in 1:13){
+  xy2 = xy[xy$cluster3 == i, ]
+  dists2 = as.matrix(dist(xy2[1:2], method = "euclidean", diag = FALSE, upper = FALSE, p = 2))
+  dists2[lower.tri(dists2)] <- 0
+  bin3 = dists2 > 2000
+    
+  vec3 = cbind(vec3, sum(bin3))
+  
+}
+
+vec2
+vec3
+
+#Cluster 1 y 3
+
+vec = c()
+
+for(i in 1:13){
+  
+  xy3 = xy[xy$cluster1 == i, ]
+  dists3 = as.matrix(dist(xy3[1:2], method = "euclidean", diag = FALSE, upper = FALSE, p = 2))
+  dists3[lower.tri(dists3)] <- 0
+  bin1 = dists3 > 2000
+  
+  vec = cbind(vec, sum(bin1))
+  
+}
+
+sum(vec)
+sum(vec2)
+sum(vec3)
+
+
 
