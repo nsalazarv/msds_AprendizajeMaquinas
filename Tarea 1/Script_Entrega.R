@@ -1,3 +1,6 @@
+### Script Tarea 1 MAAMS: Sebastián Novoa, Nelson Salazar y Nicolás Valenzuela.
+
+rm(list=ls())
 pacman::p_load(dplyr,psych,ggplot2,tidyverse
                ,proxy,dplyr,umap, ggdendro, cluster,dbscan,
                factoextra, flexclust,magick, ClustGeo)
@@ -254,8 +257,6 @@ fviz_silhouette(coefSil) +
   coord_flip()
 eval <- evaluacion_cluster(data_pp_xy, P5bis)
 eval
-
-#El modelo es peor xd.
 
 #Comparacion, asociamos los cluster de cada modelo a las coordenadas XY.
 xy['cluster1'] = modelo1$cluster
