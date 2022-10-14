@@ -1,0 +1,27 @@
+full_name: Object full name/designation
+a: semi-major axis(au)
+e: eccentricity
+G: Magnitude slope parameter
+i: Inclination with respect to x-y ecliptic plane(deg)
+om: Longitude of the ascending node
+w: argument of perihelion
+q: perihelion distance(au)
+ad: aphelion distance(au)
+per_y: Orbital period
+data_arc: data arc-span(d)
+condition_code: Orbit condition code
+n_obs_used: number of observations used
+H: Absolute Magnitude parameter
+extent: Object bi/tri axial ellipsoid dimensions(Km)
+albedo: geometric albedo
+rot_per: Rotation Period(h)
+GM: Standard gravitational parameter, Product of mass and gravitational constant
+BV: Color index B-V magnitude difference
+UB: Color index U-B magnitude difference
+IR: Color index I-R magnitude difference
+spec_B: Spectral taxonomic type(SMASSII)
+spec_T: Spectral taxonomic type(Tholen)
+neo: Near Earth Object
+pha: possible hazard (based on others criteria)
+moid: Earth Minimum orbit Intersection Distance(au)
+Danger: Asteroid over a 2km diameter
