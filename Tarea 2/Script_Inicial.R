@@ -35,9 +35,8 @@ Column_na
 # True/falso presencia nulos por columna/fila
 valores_col <- apply(X = is.na(data), MARGIN = 2, FUN = sum) > 0
 valores_col
-# Las columnas 1, index, full_name, condition_code, neo y pha, NO tienen NA
+# Las columnas 1 (indice), index, full_name, condition_code, neo y pha, NO tienen NA
 
 # Columnas con su respectivo numero de nulos
 apply(X = is.na(data), MARGIN = 2, FUN = sum)[valores_col]
-
 
