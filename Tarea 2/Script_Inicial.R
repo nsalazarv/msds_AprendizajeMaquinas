@@ -6,7 +6,38 @@ set.seed(42)
 tidymodels_prefer()
 
 # Cargamos la data
-data_raw <- read_rds("dataTrain.csv")
+data <- read_csv("Tareas/msds_AprendizajeMaquinas/Tarea 2/dataTrain.csv")
 
 # Identificamos el numero de filas
-n <- nrow(data.num)
+n <- nrow(data)
+n
+# Tenemos 100.000 filas iniciales
+
+# Aplicamos los mismos tratamientos que en el caso de DBScan
+# data.num <- data_raw %>%
+#     dplyr::select(where(is.numeric)) %>%
+#     drop_na()
+
+# Identificamos el numero de filas
+# n_new <- nrow(data.num)
+# n_new
+
+# Seleccionamos las variables relevantes para el análisis
+colnames(data)
+ncol(data)
+# Tenemos 29 variables
+
+# Observamos si existen datos nulos
+Column_na <- sum(apply(X = is.na(data), MARGIN = 2, FUN = sum) > 0)
+Column_na
+# 23 Columnas tienen NA
+
+# True/falso presencia nulos por columna/fila
+valores_col <- apply(X = is.na(data), MARGIN = 2, FUN = sum) > 0
+valores_col
+# Las columnas 1, index, full_name, condition_code, neo y pha, NO tienen NA
+
+# Columnas con su respectivo numero de nulos
+apply(X = is.na(data), MARGIN = 2, FUN = sum)[valores_col]
+
+
