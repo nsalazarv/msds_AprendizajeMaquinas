@@ -30,22 +30,82 @@ b<-apply(X=is.na(data),MARGIN=2,FUN =sum)[valores_col]
 b
 Col_Train_nulos<-names(b[b>99500])
 Col_Train_nulos
-
+#Eliminamos los indices:
+data$X<-NULL
+data$index<-NULL
+data$full_name<-NULL
 #Elimnamos las columnas con mayor cantidad de nulos.
 data$G<-NULL
 data$GM<-NULL
 data$BV<-NULL
 data$UB<-NULL
 data$IR<-NULL
+#Borramos variables categoricas que no afectan a nuestro.
+data$neo<-NULL
+data$pha<-NULL
+data$extent<-NULL
+data$spec_B<-NULL
+data$spec_T<-NULL
+
 
 #Siguen habiendo 99970 tuplas con nulos.
 
 # Analisis Descriptivo ####
 str(data)
+nombres<-names(select_if(data, is.numeric))
+nombres
+
+medias<-c(mean(data$a,na.rm = TRUE),mean(data$e,na.rm = TRUE),mean(data$i,na.rm = TRUE)
+          ,mean(data$om,na.rm = TRUE),mean(data$w,na.rm = TRUE),mean(data$q,na.rm = TRUE)
+          ,mean(data$ad,na.rm = TRUE),mean(data$per_y,na.rm = TRUE),mean(data$data_arc,na.rm = TRUE)
+          ,mean(data$condition_code,na.rm = TRUE),mean(data$n_obs_used,na.rm = TRUE)
+          ,mean(data$H,na.rm = TRUE),mean(data$diameter,na.rm = TRUE),mean(data$albedo,na.rm = TRUE)
+          ,mean(data$rot_per,na.rm = TRUE),mean(data$moid,na.rm = TRUE))
+#guardamos data con nulos:
+data2=data
+#Remplazar los nulos con la media.
+for (i in 1:16){
+  variable=nombres[i]
+  data[[variable]]<- round(data[[variable]] %>%
+                                  replace(is.na(.),medias[i]), digits = 6)
+}
+
+#columnas con su respectivo numero de nulos
+apply(X=is.na(data),MARGIN=2,FUN =sum)
+#Correlaciones
+
+muestra<-select_if(data,is.numeric)
+#Menor a mayor considerando negativos:
+cor(muestra, method="pearson")[13,][order(cor(muestra, method="pearson")[15,])]
+#Menor a mayor en absoluto:
+sort(abs(cor(muestra, method="pearson")[13,]))
+sort(abs(cor(muestra, method="spearman")[13,]))
+
+#Borramos data con correlacion bajo 0.2 en pearson y 0.3 en spearmann
+data$w<-NULL
+data$rot_per<-NULL
+data$om<-NULL
+data$e<-NULL
+data$i<-NULL
+data$albedo<-NULL
+data$condition_code<-NULL
+muestra<-select_if(data,is.numeric)
+sort(abs(cor(muestra, method="pearson")[8,]))
+sort(abs(cor(muestra, method="spearman")[8,]))
+#Data hasta ahora considerando lo realizado con anterioridad.
+
+#nulos por media, elimine categoricas y elimine correlaciones segun pearson y spearmann.
+write.csv(data, file="data_nulos_media.csv")
+
 
 #Variable a predecir:
+
 summary(data["diameter"])
 hist(x=data$diameter)
 
-algo<-data$diameter[data["diameter"]>200]
+algo<-data$diameter[data["diameter"]<20]
+hist(x=algo)
+print(length(algo))
+summary(algo)
+summary(data$diameter)
 
