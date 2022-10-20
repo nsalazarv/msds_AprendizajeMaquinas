@@ -40,3 +40,13 @@ valores_col
 # Columnas con su respectivo numero de nulos
 apply(X = is.na(data), MARGIN = 2, FUN = sum)[valores_col]
 
+#True/falso presencia nulos por columna/fila
+valores_col<-apply(X=is.na(data),MARGIN=2,FUN =sum)>0
+valores_tu<-apply(X=is.na(data),MARGIN=1,FUN =sum)>0
+
+#Filas con su respectivo indice y n°de nulo
+indice_nulos<-cbind(rownames(data)[valores_tu],apply(X=is.na(data),MARGIN=1,FUN =sum)[valores_tu])
+valores_1<-apply(X=is.na(data),MARGIN=1,FUN =sum)>1
+
+#Buscamos el indice con NA en diameter
+which(is.na(data$diameter))
