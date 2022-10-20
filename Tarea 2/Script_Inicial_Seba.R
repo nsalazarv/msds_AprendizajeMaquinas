@@ -13,15 +13,6 @@ n <- nrow(data)
 n
 # Tenemos 100.000 filas iniciales
 
-# Aplicamos los mismos tratamientos que en el caso de DBScan
-# data.num <- data_raw %>%
-#     dplyr::select(where(is.numeric)) %>%
-#     drop_na()
-
-# Identificamos el numero de filas
-# n_new <- nrow(data.num)
-# n_new
-
 # Seleccionamos las variables relevantes para el análisis
 colnames(data)
 ncol(data)
@@ -98,3 +89,76 @@ cor.test(data$diameter, data$moid, method = "pearson") # 0.3509
 cor.test(data$diameter, data$n_obs_used, method = "pearson") # 0.3618
 cor.test(data$diameter, data$data_arc, method = "pearson") # 0.4940
 cor.test(data$diameter, data$diameter, method = "pearson") # 1
+
+#Eliminamos los indices:
+data$X<-NULL
+data$index<-NULL
+data$full_name <- NULL
+
+#Elimnamos las columnas con mayor cantidad de nulos.
+data$G<-NULL
+data$GM<-NULL
+data$BV<-NULL
+data$UB<-NULL
+data$IR <- NULL
+
+#Borramos variables categoricas que no afectan a nuestro.
+data$neo<-NULL
+data$pha<-NULL
+data$extent<-NULL
+data$spec_B<-NULL
+data$spec_T<-NULL
+
+# Analisis Descriptivo
+str(data)
+nombres<-names(select_if(data, is.numeric))
+nombres
+
+# Guardamos data con nulos:
+data2=data
+#Remplazar los nulos con ceros
+for (i in 1:16){
+  variable=nombres[i]
+  data[[variable]] <- round(data[[variable]] %>%
+      replace(is.na(.), 0))
+}
+
+#columnas con su respectivo numero de nulos
+apply(X=is.na(data),MARGIN=2,FUN =sum)
+# Correlaciones
+
+muestra <- select_if(data, is.numeric)
+
+#Menor a mayor considerando negativos:
+cor(muestra, method="pearson")[13,][order(cor(muestra, method="pearson")[15,])]
+#Menor a mayor en absoluto:
+sort(abs(cor(muestra, method="pearson")[13,]))
+sort(abs(cor(muestra, method="spearman")[13,]))
+
+#Borramos data con correlacion bajo 0.2 en pearson y 0.3 en spearmann
+data$w<-NULL
+data$rot_per<-NULL
+data$om<-NULL
+data$e<-NULL
+data$i<-NULL
+data$albedo<-NULL
+data$condition_code<-NULL
+muestra<-select_if(data,is.numeric)
+sort(abs(cor(muestra, method="pearson")[8,]))
+sort(abs(cor(muestra, method="spearman")[8,]))
+#Data hasta ahora considerando lo realizado con anterioridad.
+
+#nulos por cero, elimine categoricas y elimine correlaciones segun pearson y spearmann.
+write.csv(data, file="data_nulos_cero.csv")
+
+
+#Variable a predecir:
+
+summary(data["diameter"])
+hist(x=data$diameter)
+
+algo<-data$diameter[data["diameter"]<20]
+hist(x=algo)
+print(length(algo))
+summary(algo)
+summary(data$diameter)
