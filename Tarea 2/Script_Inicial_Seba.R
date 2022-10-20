@@ -50,3 +50,51 @@ valores_1<-apply(X=is.na(data),MARGIN=1,FUN =sum)>1
 
 #Buscamos el indice con NA en diameter
 which(is.na(data$diameter))
+
+# Correlaciones de DIAMETER con el resto de variables
+cor.test(data$diameter, data$a, method = "pearson") # 0.2151
+cor.test(data$diameter, data$e, method = "pearson") # -0.0485
+cor.test(data$diameter, data$G, method = "pearson") # -0.1102
+cor.test(data$diameter, data$i, method = "pearson") # 0.0544
+cor.test(data$diameter, data$om, method = "pearson") # 0.006
+cor.test(data$diameter, data$w, method = "pearson") # 0.0028
+cor.test(data$diameter, data$q, method = "pearson") # 0.3047
+cor.test(data$diameter, data$ad, method = "pearson") # 0.1807
+cor.test(data$diameter, data$per_y, method = "pearson") # 0.0466
+cor.test(data$diameter, data$data_arc, method = "pearson") # 0.4940
+cor.test(data$diameter, data$condition_code, method = "pearson") #-0.072
+cor.test(data$diameter, data$n_obs_used, method = "pearson") # 0.3618
+cor.test(data$diameter, data$H, method = "pearson") # -0.5644
+cor.test(data$diameter, data$extent, method = "pearson") # NO SE PUEDE
+cor.test(data$diameter, data$albedo, method = "pearson") # -0.1037
+cor.test(data$diameter, data$rot_per, method = "pearson") # 0.007
+cor.test(data$diameter, data$GM, method = "pearson") # NO SE PUEDE
+cor.test(data$diameter, data$BV, method = "pearson") # -0.3179
+cor.test(data$diameter, data$UB, method = "pearson") # -0.2611
+cor.test(data$diameter, data$IR, method = "pearson") # NO SE PUEDE
+cor.test(data$diameter, data$spec_B, method = "pearson") # NO SE PUEDE
+cor.test(data$diameter, data$spec_T, method = "pearson") # NO SE PUEDE
+cor.test(data$diameter, data$neo, method = "pearson") # NO SE PUEDE
+cor.test(data$diameter, data$pha, method = "pearson") # NO SE PUEDE
+cor.test(data$diameter, data$moid, method = "pearson") # 0.3509
+
+# Ordenamos de menor a mayor correlación
+cor.test(data$diameter, data$H, method = "pearson") # -0.5644
+cor.test(data$diameter, data$BV, method = "pearson") # -0.3179
+cor.test(data$diameter, data$UB, method = "pearson") # -0.2611
+cor.test(data$diameter, data$G, method = "pearson") # -0.1102
+cor.test(data$diameter, data$albedo, method = "pearson") # -0.1037
+cor.test(data$diameter, data$condition_code, method = "pearson") #-0.072
+cor.test(data$diameter, data$e, method = "pearson") # -0.0485
+cor.test(data$diameter, data$w, method = "pearson") # 0.0028
+cor.test(data$diameter, data$om, method = "pearson") # 0.006
+cor.test(data$diameter, data$rot_per, method = "pearson") # 0.007
+cor.test(data$diameter, data$per_y, method = "pearson") # 0.0466
+cor.test(data$diameter, data$i, method = "pearson") # 0.0544
+cor.test(data$diameter, data$ad, method = "pearson") # 0.1807
+cor.test(data$diameter, data$a, method = "pearson") # 0.2151
+cor.test(data$diameter, data$q, method = "pearson") # 0.3047
+cor.test(data$diameter, data$moid, method = "pearson") # 0.3509
+cor.test(data$diameter, data$n_obs_used, method = "pearson") # 0.3618
+cor.test(data$diameter, data$data_arc, method = "pearson") # 0.4940
+cor.test(data$diameter, data$diameter, method = "pearson") # 1
