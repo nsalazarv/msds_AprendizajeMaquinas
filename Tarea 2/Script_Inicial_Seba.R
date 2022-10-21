@@ -5,8 +5,11 @@ set.seed(42)
 # Define funciones de tidymodels por defecto
 tidymodels_prefer()
 
-# Cargamos la data
+# Cargamos la data de entrenamiento
 data <- read_csv("Tareas/msds_AprendizajeMaquinas/Tarea 2/dataTrain.csv")
+
+#Cargamos la data de evaluacion
+data_eval <- read_csv("Tareas/msds_AprendizajeMaquinas/Tarea 2/dataEval.csv")
 
 # Identificamos el numero de filas
 n <- nrow(data)
@@ -102,7 +105,7 @@ data$BV<-NULL
 data$UB<-NULL
 data$IR <- NULL
 
-#Borramos variables categoricas que no afectan a nuestro.
+#Borramos variables categoricas que no afectan a nuestro análisis
 data$neo<-NULL
 data$pha<-NULL
 data$extent<-NULL
@@ -117,16 +120,16 @@ nombres
 # Guardamos data con nulos:
 data2=data
 #Remplazar los nulos con ceros
-for (i in 1:16){
+for (i in 1:17){
   variable=nombres[i]
   data[[variable]] <- round(data[[variable]] %>%
       replace(is.na(.), 0))
 }
 
-#columnas con su respectivo numero de nulos
-apply(X=is.na(data),MARGIN=2,FUN =sum)
-# Correlaciones
+# columnas con su respectivo numero de nulos
+apply(X = is.na(data), MARGIN = 2, FUN = sum)
 
+# Correlaciones
 muestra <- select_if(data, is.numeric)
 
 #Menor a mayor considerando negativos:
@@ -162,3 +165,97 @@ hist(x=algo)
 print(length(algo))
 summary(algo)
 summary(data$diameter)
+
+########### PROCESAMIENTO DATAEVALUACION ##################
+
+# Identificamos el numero de filas
+n <- nrow(data_eval)
+n
+# Tenemos 37.681 filas iniciales
+
+# Seleccionamos las variables relevantes para el análisis
+colnames(data_eval)
+ncol(data_eval)
+# Tenemos 29 variables
+
+# Observamos si existen datos nulos
+Column_na_eval <- sum(apply(X = is.na(data_eval), MARGIN = 2, FUN = sum) > 0)
+Column_na_eval
+# 22 Columnas tienen NA
+
+# True/falso presencia nulos por columna/fila
+valores_col_eval <- apply(X = is.na(data_eval), MARGIN = 2, FUN = sum) > 0
+valores_col_eval
+# Las columnas 1 (indice), index, full_name, condition_code, neo y pha, NO tienen NA
+
+# Columnas con su respectivo numero de nulos
+apply(X = is.na(data_eval), MARGIN = 2, FUN = sum)[valores_col_eval]
+
+#True/falso presencia nulos por columna/fila
+valores_col_eval<-apply(X=is.na(data_eval),MARGIN=2,FUN =sum)>0
+valores_tu_eval<-apply(X=is.na(data_eval),MARGIN=1,FUN =sum)>0
+
+#Filas con su respectivo indice y n°de nulo
+indice_nulos<-cbind(rownames(data_eval)[valores_tu_eval],apply(X=is.na(data_eval),MARGIN=1,FUN =sum)[valores_tu_eval])
+valores_1_eval<-apply(X=is.na(data_eval),MARGIN=1,FUN =sum)>1
+
+#Eliminamos los indices:
+data_eval$X<-NULL
+data_eval$index<-NULL
+data_eval$full_name <- NULL
+
+#Elimnamos las columnas que eliminamos en el dataTrain
+data_eval$G<-NULL
+data_eval$GM<-NULL
+data_eval$BV<-NULL
+data_eval$UB<-NULL
+data_eval$IR <- NULL
+
+#Borramos variables categoricas que no afectan a nuestro análisis
+data_eval$neo<-NULL
+data_eval$pha<-NULL
+data_eval$extent<-NULL
+data_eval$spec_B<-NULL
+data_eval$spec_T<-NULL
+
+# Analisis Descriptivo
+str(data_eval)
+nombres<-names(select_if(data_eval, is.numeric))
+nombres
+
+# Guardamos data con nulos:
+data2_eval=data_eval
+#Remplazar los nulos con ceros
+for (i in 1:16){
+  variable=nombres[i]
+  data_eval[[variable]] <- round(data_eval[[variable]] %>%
+      replace(is.na(.), 0))
+}
+
+# Columnas con su respectivo numero de nulos
+apply(X = is.na(data_eval), MARGIN = 2, FUN = sum)
+
+# Correlaciones
+muestra_eval <- select_if(data_eval, is.numeric)
+
+#Menor a mayor considerando negativos:
+cor(muestra_eval, method="pearson")[13,][order(cor(muestra_eval, method="pearson")[16,])]
+#Menor a mayor en absoluto:
+sort(abs(cor(muestra_eval, method="pearson")[16,]))
+sort(abs(cor(muestra_eval, method="spearman")[16,]))
+
+#Borramos data con correlacion bajo 0.2 en pearson y 0.3 en spearmann
+data_eval$w<-NULL #0.002 en pearson y 0.001 en spearmann
+data_eval$rot_per<-NULL #0.003 en pearson y 0.01 en spearmann
+data_eval$om<-NULL #0.01 en pearson y 0.006 en spearmann
+data_eval$e<-NULL #0.04 en pearson y 0.05 en spearmann
+data_eval$i<-NULL #0.02 en pearson y 0.01 en spearmann
+data_eval$albedo<-NULL #0.02 en pearson y 0.02 en spearmann
+data_eval$condition_code<-NULL #0.03 en pearson y 0.03 en spearmann
+muestra_eval<-select_if(data_eval,is.numeric) 
+sort(abs(cor(muestra_eval, method="pearson")[9,]))
+sort(abs(cor(muestra_eval, method="spearman")[9,]))
+#Data hasta ahora considerando lo realizado con anterioridad.
+
+#nulos por cero, elimine categoricas y elimine correlaciones segun pearson y spearmann.
+write.csv(data_eval, file="data_eval_nulos_cero.csv")
