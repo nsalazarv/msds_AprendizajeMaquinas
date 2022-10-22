@@ -7,8 +7,8 @@ set.seed(23)
 
 tidymodels_prefer()
 
-data <- read.delim(file = '/Users/nsalazarv/Library/CloudStorage/OneDrive-UniversidadAdolfoIbanez/Codes/Universidad/MAMDS/Tareas/data_nulos_cero.txt', sep = ',')
-dataEval <- read.delim(file = '/Users/nsalazarv/Library/CloudStorage/OneDrive-UniversidadAdolfoIbanez/Codes/Universidad/MAMDS/Tareas/data_eval_nulos_cero.txt', sep = ',')
+data <- read.delim(file = 'data_nulos_cero.txt', sep = ',')
+dataEval <- read.delim(file = 'data_eval_nulos_cero.txt', sep = ',')
 
 mod_test <-
   nearest_neighbor(neighbors = tune(), weight_func = "triangular") %>%
