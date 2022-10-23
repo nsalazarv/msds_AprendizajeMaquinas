@@ -1,4 +1,4 @@
-pacman::p_load(psych,ggplot2,tidyverse,proxy,dplyr)
+pacman::p_load(psych,ggplot2,tidyverse,proxy,dplyr,rlang,purrr)
 data<-read.csv("dataTrain.csv")
 test<-read.csv("dataEval.csv")
 
@@ -40,15 +40,16 @@ data$GM<-NULL
 data$BV<-NULL
 data$UB<-NULL
 data$IR<-NULL
-#Borramos variables categoricas que no afectan a nuestro.
+#Borramos variables categoricas que no afectan a nuestro problema.
+apply(X=is.na(data),MARGIN=2,FUN =sum)
 data$neo<-NULL
 data$pha<-NULL
 data$extent<-NULL
 data$spec_B<-NULL
 data$spec_T<-NULL
 
-
 #Siguen habiendo 99970 tuplas con nulos.
+
 
 # Analisis Descriptivo ####
 str(data)
@@ -93,19 +94,62 @@ muestra<-select_if(data,is.numeric)
 sort(abs(cor(muestra, method="pearson")[8,]))
 sort(abs(cor(muestra, method="spearman")[8,]))
 #Data hasta ahora considerando lo realizado con anterioridad.
+nombres<-names(select_if(data, is.numeric))
+nombres
+for (i in 1:9){
+  variable=nombres[i]
+  hist(data[[variable]],main=nombres[i],col="red")
+}
 
+#Notamos que diametro tiene muchos valores extremos por lo que los eliminamos.
+data<-data[data$diameter < 20, ]
+for (i in 1:9){
+  variable=nombres[i]
+  hist(data[[variable]],main=nombres[i],col="blue")
+}
 #nulos por media, elimine categoricas y elimine correlaciones segun pearson y spearmann.
-write.csv(data, file="data_nulos_media.csv")
+write.csv(data, file="data_nulos_media_sinoutliers.csv")
 
 
-#Variable a predecir:
+##Realizamos mismo tratamiento para test.####
+#Eliminamos variables.
+test$X<-NULL
+test$index<-NULL
+test$full_name<-NULL
+test$G<-NULL
+test$GM<-NULL
+test$BV<-NULL
+test$UB<-NULL
+test$IR<-NULL
+test$neo<-NULL
+test$pha<-NULL
+test$extent<-NULL
+test$spec_B<-NULL
+test$spec_T<-NULL
+test$w<-NULL
+test$rot_per<-NULL
+test$om<-NULL
+test$e<-NULL
+test$i<-NULL
+test$albedo<-NULL
+test$condition_code<-NULL
 
-summary(data["diameter"])
-hist(x=data$diameter)
+nombres<-names(select_if(test, is.numeric))
+nombres
 
-algo<-data$diameter[data["diameter"]<20]
-hist(x=algo)
-print(length(algo))
-summary(algo)
-summary(data$diameter)
-
+medias<-c(mean(test$a,na.rm = TRUE),
+          mean(test$q,na.rm = TRUE),
+          mean(test$ad,na.rm = TRUE),
+          mean(test$per_y,na.rm = TRUE),
+          mean(test$data_arc,na.rm = TRUE),
+          mean(test$n_obs_used,na.rm = TRUE),
+          mean(test$H,na.rm = TRUE),
+          mean(test$moid,na.rm = TRUE)
+)
+#Remplazar los nulos con la media.
+for (i in 1:8){
+  variable=nombres[i]
+  test[[variable]]<- round(test[[variable]] %>%
+                             replace(is.na(.),medias[i]), digits = 6)
+}
+write.csv(test, file="eval_nulosmedia.csv")

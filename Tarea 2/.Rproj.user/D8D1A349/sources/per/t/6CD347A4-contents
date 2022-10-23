@@ -1,0 +1,119 @@
+#1: Simular 50 a?os (con la respectiva cantidad de d?as para cada mes y 
+#asumiendo exactamente 12 a?os bisiestos dentro de ese periodo),
+#donde en cada d?a exista la probabilidad mencionada de encontrar a su vecina barriendo.
+set.seed(8)
+#generamos los 18262 d?as correspondiente a 50 a?os de simulaci?n
+datos1<-sample(0:1,18262,replace=T) 
+#generamos clasificaci?n por mes
+meses<-c("Enero","Febrero","Marzo","Abril","Mayo","Junio",
+           "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre")
+Diasxmb<-c(31,	29,	31,	30,	31,	30,	31,	31,	30,	31,	30,	31)
+Diasxm<-c(31,	28,	31,	30,	31,	30,	31,	31,	30,	31,	30,	31)
+
+calendario<-c()
+calendario_m<-c()
+calendario_a<-c()
+contador<-1
+
+for (i in 1:38){
+  for (j in 1:12){
+    contador<-1
+    while (contador <= Diasxm[j]){
+      contador=contador+1
+      calendario_m<-c(calendario_m,meses[j])
+      calendario_a<-c(calendario_a,i)
+    }
+  }
+}
+contador<-1
+for (i in 39:50){
+  for (j in 1:12){
+    contador<-1
+    while (contador <= Diasxmb[j]){
+      contador=contador+1
+      calendario_m<-c(calendario_m,meses[j])
+      calendario_a<-c(calendario_a,i)
+    }
+  }
+}
+calendario<-c(calendario_m,calendario_a,datos1)
+mat_c<-matrix(calendario, ncol=3)
+
+
+df<-data.frame("A?o"=calendario_a,"Mes"=calendario_m,"Barre"=datos1)
+
+#2:  Sacar la frecuencia de avistamientos para cada uno de los meses.
+
+#Generamos una columna para distinguir cada mes y de cada a?o.
+
+df$A?o_mes<-paste(df$A?o,df$Mes,sep="_")
+
+df2<-df[,3:4]
+#Agrupamos por mes y a?o y obtenemos su frecuencia
+#Importante instalar y activar la libreria "dplyr".
+grupo<-group_by(df, A?o_mes)
+FrecuenciaxMes<-summarise(grupo,Frecuencia=sum(Barre),n=n())
+
+#3:  Graficar un histograma de densidad de probabilidad de las frecuencias obtenidas.
+n<-FrecuenciaxMes["n"]
+frecuencia<-FrecuenciaxMes["Frecuencia"]
+fecha_mes<-FrecuenciaxMes["A?o_mes"]
+fecha<-data.frame()
+prob_mes<-data.frame()
+aux<-0
+for(i in 1:600){
+  aux<-frecuencia[i,1]/n[i,1]
+  prob_mes<-rbind(prob_mes,aux)
+  fecha<-rbind(fecha,fecha_mes[i,1])
+}
+prob<-cbind(fecha,prob_mes)
+prob_graf<-c()
+for (i in FrecuenciaxMes[2]){
+  prob_graf<-c(prob_graf,i)
+}
+
+
+hist(prob_graf,prob=TRUE, main="Histograma Densidad de probabilidad",
+     xlab="N?avistamientos por mes",ylab="densidad",col="lightblue")
+#4:
+set.seed(100)
+
+media=30*0.5
+desviacion=sqrt(30*0.5*0.5)
+
+binomial<-rbinom(n=600,size=30,prob=0.5)
+normal<-rnorm(n=600,mean=media,sd=desviacion)
+
+
+#histograma con linea de densidad de simulaci?n hecha en los puntos anteriores.
+hist(prob_graf,prob=TRUE, main="Histograma Densidad de probabilidad",
+     xlab="N?Avistamientos por mes",ylab="Densidad",col="lightblue")
+lines(density(prob_graf), lwd=2, col="red")
+legend("topright","Densidad",col="red",lwd=2)
+
+#histograma con lineas de densidad y binomial.
+hist(prob_graf,prob=TRUE, main="Histograma Densidad de probabilidad",
+     xlab="N?Avistamientos por mes",ylab="Densidad",col="lightblue")
+lines(density(prob_graf), lwd=2, col="red")
+lines(density(binomial),lwd=2,col="blue")
+legend("topright",c("Densidad","Binomial"),col=c("red","blue"),lwd=c(2,2),cex=0.8)
+
+#histograma con lineas de densidad, binomial y normal.
+hist(prob_graf,prob=TRUE, main="Histograma Densidad de probabilidad",
+     xlab="N?Avistamientos por mes",ylab="Densidad",col="lightblue")
+lines(density(prob_graf), lwd=2, col="red")
+lines(density(binomial),lwd=2,col="blue")
+lines(density(normal), lwd=2, col="orange")
+legend("topright",c("Densidad","Binomial","Normal"),col=c("red","blue","orange")
+       ,lwd=c(2,2),cex=0.8)
+
+#Histograma con linea binomial y normal con m?s casos.
+
+normal2<-rnorm(n=600000,mean=15,sd=2.7)
+hist(prob_graf,prob=TRUE, main="Histograma Densidad de probabilidad",
+     xlab="N?Avistamientos por mes",ylab="Densidad",col="lightblue")
+lines(density(prob_graf), lwd=2, col="red")
+lines(density(binomial),lwd=2,col="blue")
+lines(density(normal2), lwd=2, col="orange")
+legend("topright",c("Densidad","Binomial","Normal"),col=c("red","blue","orange")
+       ,lwd=c(2,2),cex=0.8)
