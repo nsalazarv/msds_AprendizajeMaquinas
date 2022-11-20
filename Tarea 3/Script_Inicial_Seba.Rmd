@@ -1,0 +1,70 @@
+---
+title: "T3MAAMS"
+output: html_document
+date: "2022-11-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Tarea 3: Métodos de Aprendizaje de Máquinas en Data Science
+
+Sebastián Novoa, Nelson Salazar y Nicolás Valenzuela
+
+```{r}
+rm(list = ls())
+pacman::p_load(tidyverse, tidymodels, kknn, caret)
+set.seed(23)
+tidymodels_prefer()
+data <- read.csv("ALUMNOS-trainData.csv")
+test <- read.csv("ALUMNOS-evalData.csv")
+summary(data$noshow)
+```
+
+```{r}
+## Viendo nulos de Eval: ####
+#Tuplas con nulos:
+Tuplas_na<-sum(apply(X=is.na(test),MARGIN=1,FUN =sum)>0)
+Tuplas_na # Ninguna tupla tiene nulos
+```
+
+```{r}
+# Columnas con nulos:
+# Column_na <- sum(apply(X = is.na(test), MARGIN = 2, FUN = sum) > 0)
+
+# Columnas con su respectivo numero de nulos
+# valores_col<-apply(X=is.na(test),MARGIN=2,FUN =sum)>0
+# a<-apply(X=is.na(test),MARGIN=2,FUN =sum)[valores_col]
+# a
+# Col_Eval_nulos<-names(a[a>37500])
+# Col_Eval_nulos
+```
+
+```{r}
+## Viendo nulos de Train: ####
+# Tuplas con nulos:
+Tuplas_na<-sum(apply(X=is.na(data),MARGIN=1,FUN =sum)>0)
+Tuplas_na # Ninguna tupla tiene nulos
+```
+
+```{r}
+# Columnas con nulos:
+# Column_na <- sum(apply(X = is.na(data), MARGIN = 2, FUN = sum) > 0)
+
+# Columnas con su respectivo numero de nulos
+# valores_col<-apply(X=is.na(data),MARGIN=2,FUN =sum)>0
+# b<-apply(X=is.na(data),MARGIN=2,FUN =sum)[valores_col]
+# b
+# Col_Train_nulos<-names(b[b>99500])
+# Col_Train_nulos
+```
+
+```{r}
+# Analisis Descriptivo ####
+str(data)
+
+# Variables numericas
+nombres<-names(select_if(data, is.numeric))
+nombres
+```
