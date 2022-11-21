@@ -68,3 +68,44 @@ str(data)
 nombres<-names(select_if(data, is.numeric))
 nombres
 ```
+
+```{r}
+# Eliminamos variables que no son relevantes para este caso y calculamos correlaciones
+# Es decir, eliminamos id, fecha, numero de vuelo, tiempo de salida y seleccionamos variables numéricas para realizar el cálculo de correlaciones
+muestra <- select_if(data, is.numeric)
+muestra$id <- NULL
+muestra$flight_number <- NULL
+
+nombres_variables <- names(muestra)
+nombres_variables
+```
+
+```{r}
+# Menor a mayor considerando negativos:
+cor(muestra, method = "pearson")[3, ][order(cor(muestra, method = "pearson")[17, ])]
+
+#Menor a mayor en absoluto:
+sort(abs(cor(muestra, method="pearson")[3,]))
+sort(abs(cor(muestra, method = "spearman")[3, ]))
+#sort(abs(cor(muestra, method = "kendall")[3, ]))
+```
+
+```{r}
+# Transformamos variable noshow a 0 y 1
+muestra$noshow <- ifelse(muestra$noshow > 0, 1, 0)
+```
+
+```{r}
+# Obtenemos correlaciones con este cambio
+# Menor a mayor considerando negativos:
+cor(muestra, method = "pearson")[3, ][order(cor(muestra, method = "pearson")[17, ])]
+
+#Menor a mayor en absoluto:
+sort(abs(cor(muestra, method="pearson")[3,]))
+sort(abs(cor(muestra, method = "spearman")[3, ]))
+
+```
+
+```{r}
+
+```
