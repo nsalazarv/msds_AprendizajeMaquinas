@@ -23,42 +23,28 @@ summary(data$noshow)
 ```
 
 ```{r}
-## Viendo nulos de Eval: ####
-#Tuplas con nulos:
-Tuplas_na<-sum(apply(X=is.na(test),MARGIN=1,FUN =sum)>0)
-Tuplas_na # Ninguna tupla tiene nulos
-```
-
-```{r}
-# Columnas con nulos:
-# Column_na <- sum(apply(X = is.na(test), MARGIN = 2, FUN = sum) > 0)
-
-# Columnas con su respectivo numero de nulos
-# valores_col<-apply(X=is.na(test),MARGIN=2,FUN =sum)>0
-# a<-apply(X=is.na(test),MARGIN=2,FUN =sum)[valores_col]
-# a
-# Col_Eval_nulos<-names(a[a>37500])
-# Col_Eval_nulos
-```
-
-```{r}
 ## Viendo nulos de Train: ####
 # Tuplas con nulos:
 Tuplas_na<-sum(apply(X=is.na(data),MARGIN=1,FUN =sum)>0)
 Tuplas_na # Ninguna tupla tiene nulos
+
+apply(is.na(data), 2, mean)   # Nulos por columna
+apply(is.na(data), 2, sum)    # Nulos por variable
 ```
+
+### El dataset de Entrenamiento no posee nulos
 
 ```{r}
-# Columnas con nulos:
-# Column_na <- sum(apply(X = is.na(data), MARGIN = 2, FUN = sum) > 0)
+## Viendo nulos de Eval: ####
+#Tuplas con nulos:
+Tuplas_na<-sum(apply(X=is.na(test),MARGIN=1,FUN =sum)>0)
+Tuplas_na # Ninguna tupla tiene nulos
 
-# Columnas con su respectivo numero de nulos
-# valores_col<-apply(X=is.na(data),MARGIN=2,FUN =sum)>0
-# b<-apply(X=is.na(data),MARGIN=2,FUN =sum)[valores_col]
-# b
-# Col_Train_nulos<-names(b[b>99500])
-# Col_Train_nulos
+apply(is.na(test), 2, mean)   # Nulos por columna
+apply(is.na(test), 2, sum)    # Nulos por variable
 ```
+
+### El dataset de Evaluación no posee nulos
 
 ```{r}
 # Analisis Descriptivo ####
@@ -68,6 +54,8 @@ str(data)
 nombres<-names(select_if(data, is.numeric))
 nombres
 ```
+
+### Seleccionamos variables numéricas y eliminamos variables no relevantes para este caso.
 
 ```{r}
 # Eliminamos variables que no son relevantes para este caso y calculamos correlaciones
@@ -81,6 +69,11 @@ nombres_variables
 ```
 
 ```{r}
+# Análisis de la muestra con variables numéricas
+summary(muestra)
+```
+
+```{r}
 # Menor a mayor considerando negativos:
 cor(muestra, method = "pearson")[3, ][order(cor(muestra, method = "pearson")[17, ])]
 
@@ -90,9 +83,22 @@ sort(abs(cor(muestra, method = "spearman")[3, ]))
 #sort(abs(cor(muestra, method = "kendall")[3, ]))
 ```
 
+### Obtenemos correlaciones relativamente bajas con los 2 métodos utilizados, tanto pearson como spearman, por lo que no se descartan variables.
+
+```{r}
+# Boxplot de la variable noshow
+boxplot(muestra$noshow)
+```
+
+### Ahora que tenemos un conocimiento de la muestra, modificaremos la variable noshow a una variable categórica, es decir, 0 y 1
+
 ```{r}
 # Transformamos variable noshow a 0 y 1
 muestra$noshow <- ifelse(muestra$noshow > 0, 1, 0)
+```
+
+```{r}
+summary(muestra$noshow)
 ```
 
 ```{r}
@@ -103,6 +109,40 @@ cor(muestra, method = "pearson")[3, ][order(cor(muestra, method = "pearson")[17,
 #Menor a mayor en absoluto:
 sort(abs(cor(muestra, method="pearson")[3,]))
 sort(abs(cor(muestra, method = "spearman")[3, ]))
+
+```
+
+```{r}
+# Boxplot de toda la muestra
+boxplot(muestra)
+```
+
+### Podemos observar que la variable revenues_usd posee una gran dispersión de sus registros.
+
+
+```{r}
+# Eliminamos outliers
+outliers <- function(muestra) {
+    minimum <- summary(muestra)[1]
+    maximum <- summary(muestra)[6]
+    quartile_1 <- summary(muestra)[2]
+    quartile_3 <- summary(muestra)[5]
+    interquartile_range <- quartile_3 - quartile_1
+
+    inf_limit <- max(minimum, quartile_1 - 1.5 * interquartile_range)
+    sup_limit <- min(maximum, quartile_3 + 1.5 * interquartile_range)
+
+    # Para no alterar tanto los datos, se reemplazan los outliers por la media
+    print(paste("Límite Inferior", length(muestra[muestra < inf_limit])))
+    print(paste("Límite Superior", length(muestra[muestra > sup_limit])))
+}
+
+cantidad_columnas = length(colnames(muestra))
+
+for (i in 1:cantidad_columnas){
+  print(colnames(muestra)[i])
+  outliers(muestra[,i])
+}
 
 ```
 
