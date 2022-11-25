@@ -121,31 +121,5 @@ boxplot(muestra)
 
 
 ```{r}
-# Eliminamos outliers
-outliers <- function(muestra) {
-    minimum <- summary(muestra)[1]
-    maximum <- summary(muestra)[6]
-    quartile_1 <- summary(muestra)[2]
-    quartile_3 <- summary(muestra)[5]
-    interquartile_range <- quartile_3 - quartile_1
-
-    inf_limit <- max(minimum, quartile_1 - 1.5 * interquartile_range)
-    sup_limit <- min(maximum, quartile_3 + 1.5 * interquartile_range)
-
-    # Para no alterar tanto los datos, se reemplazan los outliers por la media
-    print(paste("Límite Inferior", length(muestra[muestra < inf_limit])))
-    print(paste("Límite Superior", length(muestra[muestra > sup_limit])))
-}
-
-cantidad_columnas = length(colnames(muestra))
-
-for (i in 1:cantidad_columnas){
-  print(colnames(muestra)[i])
-  outliers(muestra[,i])
-}
-
-```
-
-```{r}
 
 ```
