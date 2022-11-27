@@ -309,4 +309,4 @@ x_est2 <-
   x_est2 %>%
   predict(noShow_model, .)
 
-write.csv(x_est2,"/Users/nsalazarv/Library/CloudStorage/OneDrive-UniversidadAdolfoIbanez/Codes/Universidad/MAMDS/Tareas/pred-evalData.csv, row.names = FALSE")
+write.csv(x_est2,"/Users/nsalazarv/Library/CloudStorage/OneDrive-UniversidadAdolfoIbanez/Codes/Universidad/MAMDS/Tareas/pred-evalData.csv", row.names = FALSE)
